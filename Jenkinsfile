@@ -1,6 +1,6 @@
 pipeline {
-    agent {
-        label 'maven'
+    tools {
+        maven 'maven'
     }
     stages {
         stage('Build JAR') {
