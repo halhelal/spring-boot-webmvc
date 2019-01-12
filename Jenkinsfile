@@ -4,18 +4,11 @@ pipeline {
         maven 'maven'
     }
     stages {
-        stage('Build JAR') {
-            steps {
-                sh "mvn package"
-                stash name:"jar", includes:"target/spring-boot-webmvc-1.0-SNAPSHOT.jar"
-            }
-        }
         stage('Build Image') {
             steps {
-                unstash name:"jar"
                 script {
                     openshift.withCluster() {
-                        openshift.startBuild("spring-boot-webmvc-s2i", "--from-file=target/spring-boot-webmvc-1.0-SNAPSHOT.jar", "--wait")
+                        openshift.startBuild("spring-boot-webmvc-s2i", "--from-file=build/spring-boot-webmvc-1.0-SNAPSHOT.jar", "--wait")
                     }
                 }
             }
