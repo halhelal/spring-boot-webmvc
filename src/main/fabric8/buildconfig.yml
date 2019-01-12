@@ -1,0 +1,12 @@
+kind: "BuildConfig"
+apiVersion: "v1"
+metadata:
+  name: "spring-boot-webmvc-s2i"
+spec:
+  source:
+    git:
+      uri: "https://github.com/halhelal/spring-boot-webmvc.git"
+  strategy:
+    jenkinsPipelineStrategy:
+      jenkinsfilePath: Jenkinsfile
+    type: JenkinsPipeline
