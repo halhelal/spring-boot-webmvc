@@ -5,7 +5,7 @@ pipeline {
             steps {
                 script {
                     openshift.withCluster() {
-                        openshift.startBuild("spring-boot-webmvc", "--from-file=build/spring-boot-webmvc-1.0-SNAPSHOT.jar", "--wait")
+                        openshift.startBuild("spring-boot-webmvc-s2i", "--from-file=build/spring-boot-webmvc-1.0-SNAPSHOT.jar", "--wait")
                     }
                 }
             }
