@@ -1,57 +1,31 @@
 pipeline {
-    agent any
+    agent {
+        label 'maven'
+    }
     stages {
-        stage('preamble') {
+        stage('Build JAR') {
             steps {
+                sh "mvn package"
+                stash name:"jar", includes:"target/spring-boot-webmvc-1.0-SNAPSHOT.jar"
+            }
+        }
+        stage('Build Image') {
+            steps {
+                unstash name:"jar"
                 script {
                     openshift.withCluster() {
-                        openshift.withProject() {
-                            echo "Using project: ${openshift.project()}"
-                        }
+                        openshift.startBuild("spring-boot-webmvc-s2i", "--from-file=target/spring-boot-webmvc-1.0-SNAPSHOT.jar", "--wait")
                     }
                 }
             }
         }
-        stage('build') {
-            steps {
-                sh "mvn clean package"
-                script {
-                    openshift.withCluster() {
-                        openshift.withProject() {
-                            def builds = openshift.selector("bc", "spring-boot-webmvc").related('builds')
-                            timeout(5) {
-                                builds.untilEach(1) {
-                                    return (it.object().status.phase == "Complete")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        stage('deploy') {
+        stage('Deploy') {
             steps {
                 script {
                     openshift.withCluster() {
-                        openshift.withProject() {
-                            def rm = openshift.selector("dc", templateName).rollout()
-                            timeout(5) {
-                                openshift.selector("dc", "spring-boot-webmvc").related('pods').untilEach(1) {
-                                    return (it.object().status.phase == "Running")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        stage('tag') {
-            steps {
-                script {
-                    openshift.withCluster() {
-                        openshift.withProject() {
-                            openshift.tag("spring-boot-webmvc:latest", "spring-boot-webmvc-staging:latest")
-                        }
+                        def dc = openshift.selector("dc", "spring-boot-webmvc")
+                        dc.rollout().latest()
+                        dc.rollout().status()
                     }
                 }
             }
